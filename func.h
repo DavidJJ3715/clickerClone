@@ -62,12 +62,14 @@ void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& 
 /********************************
 *       Core Functionality      *
 *********************************/
-bool checkClick(int x, int y)
+int checkClick(int x, int y)
 {
     if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))
-        {return true;}
-    return false;
+        {return 0;}
+    return -1; //!Check which upgrade box was clicked and return it to main
 }
+
+//? Template function that takes a shop object
 
 std::unordered_map<int,int> parseUpgrades(std::string upgradeString)
 {

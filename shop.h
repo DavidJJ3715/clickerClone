@@ -1,0 +1,1 @@
+//! A shop object holds the shop's level, cost of next upgrade, png, etc.

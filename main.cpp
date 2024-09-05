@@ -1,4 +1,5 @@
 #include "func.h"
+#include "shop.h"
 
 int main()
 {
@@ -41,7 +42,8 @@ int main()
                 }
                 case SDL_MOUSEBUTTONDOWN:
                 {
-                    if(checkClick(xPos, yPos))
+                    int clickVal = checkClick(xPos, yPos);
+                    if(clickVal == 0)
                         {score += 1;}
                     break;
                 }
