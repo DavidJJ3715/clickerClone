@@ -15,6 +15,7 @@
 #include <thread>
 #include <functional>
 #include <mutex>
+#include <limits.h>
 #include "../SDL2/include/SDL2/SDL.h"
 #include "../SDL2/include/SDL2/SDL_ttf.h"
 #include "../SDL2/include/SDL2/SDL_image.h"
@@ -125,20 +126,40 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score)
     SDL_DestroyTexture(scoreText);
 }
 
-void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xLocation, int yLocation)
+void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
 {
     bool menu = true;
-    int widthVal = -1;
+    int widthVal = -1, heightVal = -1;
 
-    if(xLocation > 0 and xLocation < WIDTH/3) 
+    if(xPos > 0 and xPos < WIDTH/3) 
         {widthVal = 0;}
-    else if(xLocation > WIDTH-(WIDTH/3) and xLocation < WIDTH) 
+    else if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH) 
         {widthVal = WIDTH-(WIDTH/3);}
     else
         {menu = false;}
     
     if(menu)
     {
+        switch(yPos)
+        {
+            case 0 ... 99:
+                heightVal = 0; break;
+            case 100 ... 199:
+                heightVal = 100; break;
+            case 200 ... 299:
+                heightVal = 200; break;
+            case 300 ... 399:
+                heightVal = 300; break;
+            case 400 ... 499:
+                heightVal = 400; break;
+            case 500 ... 599:
+                heightVal = 500; break;
+            case 600 ... 699:
+                heightVal = 600; break;
+            case 700 ... 800:
+                heightVal = 700; break;
+        }
+
         SDL_SetRenderDrawColor(renderer, 0,0,0,0);
         SDL_Rect blackBox = {widthVal, 0, WIDTH/3, HEIGHT};
         SDL_RenderFillRect(renderer, &blackBox);
@@ -147,7 +168,14 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xLocation, int yLo
         SDL_Rect box = {widthVal, 0, WIDTH/3, HEIGHT};
         SDL_RenderDrawRect(renderer, &box);
         for(int i=1; i<8; i++)
-            {SDL_RenderDrawLine(renderer, widthVal, i*(HEIGHT/8), widthVal+WIDTH/3, i*(HEIGHT/8));}        
+            {SDL_RenderDrawLine(renderer, widthVal, i*(HEIGHT/8), widthVal+WIDTH/3, i*(HEIGHT/8));}
+
+        SDL_SetRenderDrawColor(renderer,212,175,55,0); //Gold color for border
+        for(int i=0; i<5; i++)
+        {
+            SDL_Rect goldBox = {widthVal+i, heightVal+i, (WIDTH/3)-2*i, 100-2*i};
+            SDL_RenderDrawRect(renderer, &goldBox);
+        }
     }
 }
 
@@ -177,6 +205,7 @@ void drawPause(SDL_Renderer* renderer, TTF_Font* font, bool selection)
 
     int menuWidth = (WIDTH/2), menuHeight = 2*(HEIGHT/3); //Bounds of the black box
     int menuX = (WIDTH - menuWidth)/2, menuY = (HEIGHT - menuHeight)/2; //Starting points of the black box
+    int widthVal = (WIDTH/2)-145, heightVal = -1;
     SDL_Rect rect = {menuX, menuY, menuWidth, menuHeight}, border; //Black rectangle rect
 
     SDL_SetRenderDrawColor(renderer,0,0,0,0); //Choose black color
@@ -200,12 +229,17 @@ void drawPause(SDL_Renderer* renderer, TTF_Font* font, bool selection)
     SDL_RenderCopy(renderer, quitText, nullptr, &quit); //Render "QUIT" to the screen
 
     if(selection) //Change where border is located based on which choice is selected
-        {border = {(WIDTH/2)-145, (HEIGHT/2)-50, 300, 100};} //Resume
+        {heightVal = (HEIGHT/2)-50;} //Resume
     else
-        {border = {(WIDTH/2)-145, (HEIGHT/2)+100, 300, 100};} //Quit
+        {heightVal = (HEIGHT/2)+100;} //Quit
 
     SDL_SetRenderDrawColor(renderer,212,175,55,0); //Gold color for border
-    SDL_RenderDrawRect(renderer, &border); //Draw the golden rectangle
+    for(int i=0; i<5; i++)
+    {
+        border = {widthVal+i, heightVal+i, 300-2*i, 100-2*i};
+        SDL_RenderDrawRect(renderer, &border); //Draw the golden rectangle
+    }
+
     SDL_RenderPresent(renderer); //Draw everything to the screen
     SDL_DestroyTexture(pauseText); //Destroy every texture to prevent memory leaks
     SDL_DestroyTexture(resumeText);

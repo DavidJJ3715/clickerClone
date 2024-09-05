@@ -9,8 +9,6 @@ int main()
     Uint64 frameStart;
     bool running = true;
     std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
-    for (int i=1; i<9; i++) 
-        {std::cout << i << ": " << upgrades[i] << "\n";}
 
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
@@ -24,7 +22,6 @@ int main()
 
     while(running)
     {
-        
         frameStart = SDL_GetTicks64();
         
         SDL_Event event;
