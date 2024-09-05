@@ -58,7 +58,7 @@ void periodicSave(long long& score, bool& running)
 *********************************/
 bool checkClick(int x, int y)
 {
-    if(((x > (WIDTH/2)-100) && (x < (WIDTH/2)+100)) && ((y < (HEIGHT/2)+100)) && (y > (HEIGHT/2)-100))
+    if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))
         {return true;}
     return false;
 }
@@ -69,8 +69,10 @@ bool checkClick(int x, int y)
 void drawButton(SDL_Renderer* renderer)
 {
     SDL_Rect button = {((WIDTH/2)-100), ((HEIGHT/2)-100), 200, 200};
+    // SDL_Rect tester = {1000, 400, 200, 200};
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer, &button);
+    // SDL_RenderDrawRect(renderer, &tester);
 }
 
 void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score)
@@ -93,21 +95,27 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score)
 
 void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xLocation, int yLocation)
 {
-    //! Check where the cursor is and open the correct menu associated with that part of the screen
-    SDL_Rect achievementBox = {WIDTH/3, 0, WIDTH/3, HEIGHT};
-    SDL_Rect upgradeBox = {WIDTH-(WIDTH/3), 0, WIDTH/3, HEIGHT};
+    bool menu = true;
+    int widthVal = -1;
 
-    SDL_SetRenderDrawColor(renderer, 255,255,255,255);
-    SDL_RenderDrawRect(renderer, &achievementBox);
-    SDL_RenderDrawRect(renderer, &upgradeBox);
-
-    for(int i=0; i < 8; i++)
+    if(xLocation > 0 and xLocation < WIDTH/3) 
+        {widthVal = 0;}
+    else if(xLocation > WIDTH-(WIDTH/3) and xLocation < WIDTH) 
+        {widthVal = WIDTH-(WIDTH/3);}
+    else
+        {menu = false;}
+    
+    if(menu)
     {
-        SDL_Rect subBoxLeft = {0, i * (HEIGHT/8), WIDTH/3, HEIGHT};
-        SDL_Rect subBoxRight = {WIDTH-(WIDTH/3), i * (HEIGHT/8), WIDTH/3, HEIGHT};
+        SDL_SetRenderDrawColor(renderer, 0,0,0,0);
+        SDL_Rect blackBox = {widthVal, 0, WIDTH/3, HEIGHT};
+        SDL_RenderFillRect(renderer, &blackBox);
 
-        SDL_RenderDrawRect(renderer, &subBoxLeft);
-        SDL_RenderDrawRect(renderer, &subBoxRight);
+        SDL_SetRenderDrawColor(renderer, 255,255,255,255);
+        SDL_Rect box = {widthVal, 0, WIDTH/3, HEIGHT};
+        SDL_RenderDrawRect(renderer, &box);
+        for(int i=1; i<8; i++)
+            {SDL_RenderDrawLine(renderer, widthVal, i*(HEIGHT/8), widthVal+WIDTH/3, i*(HEIGHT/8));}        
     }
 }
 

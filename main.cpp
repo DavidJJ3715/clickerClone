@@ -2,7 +2,7 @@
 
 int main()
 {
-    int frameTime, xLocation = 0, yLocation = 0;
+    int frameTime, xLocation = WIDTH/2, yLocation = HEIGHT/2;
     long long score = loadHighScore();
     Uint64 frameStart;
     bool running = true;
