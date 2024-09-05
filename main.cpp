@@ -2,7 +2,7 @@
 
 int main()
 {
-    int frameTime;
+    int frameTime, xLocation = 0, yLocation = 0;
     long long score = loadHighScore();
     Uint64 frameStart;
     bool running = true;
@@ -19,14 +19,14 @@ int main()
 
     while(running)
     {
+        
         frameStart = SDL_GetTicks64();
         
         SDL_Event event;
         while(SDL_PollEvent(&event))
         {
-            int xLocation = event.motion.x;
-            int yLocation = event.motion.y;
-            // std::cout << "X: " << xLocation << "\tY: " << yLocation << "\n";
+            xLocation = event.motion.x;
+            yLocation = event.motion.y;
             switch(event.type)
             {
                 case SDL_QUIT:
@@ -49,7 +49,7 @@ int main()
         SDL_SetRenderDrawColor(renderer, 0,0,0,0);
         SDL_RenderClear(renderer);
         drawButton(renderer);
-        drawSideBays(renderer, font);
+        drawSideBays(renderer, font, xLocation, yLocation);
         drawScore(renderer, font, score);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;

@@ -91,8 +91,9 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score)
     SDL_DestroyTexture(scoreText);
 }
 
-void drawSideBays(SDL_Renderer* renderer, TTF_Font* font)
+void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xLocation, int yLocation)
 {
+    //! Check where the cursor is and open the correct menu associated with that part of the screen
     SDL_Rect achievementBox = {WIDTH/3, 0, WIDTH/3, HEIGHT};
     SDL_Rect upgradeBox = {WIDTH-(WIDTH/3), 0, WIDTH/3, HEIGHT};
 
