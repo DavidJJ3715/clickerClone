@@ -143,7 +143,7 @@ void drawPause(SDL_Renderer* renderer, TTF_Font* font, bool selection)
     SDL_SetRenderDrawColor(renderer,255,255,255,0); //Draw white background
     SDL_RenderClear(renderer);
 
-    int menuWidth = 500, menuHeight = 500; //Bounds of the black box
+    int menuWidth = (WIDTH/2), menuHeight = 2*(HEIGHT/3); //Bounds of the black box
     int menuX = (WIDTH - menuWidth)/2, menuY = (HEIGHT - menuHeight)/2; //Starting points of the black box
     SDL_Rect rect = {menuX, menuY, menuWidth, menuHeight}, border; //Black rectangle rect
 
@@ -160,9 +160,9 @@ void drawPause(SDL_Renderer* renderer, TTF_Font* font, bool selection)
     SDL_Texture* quitText = SDL_CreateTextureFromSurface(renderer, surface); //Make it a texture
     SDL_FreeSurface(surface); //Free the surface to prevent memory leaks
 
-    SDL_Rect pause = {(WIDTH/2)-(menuWidth/5)-50, (HEIGHT/2)-(menuHeight/2)+25, 310, 140}; //Location of "GAME PAUSED"
-    SDL_Rect resume = {(WIDTH/2)-(menuWidth/5)+5, (HEIGHT)-(menuHeight)+150, 200, 100}; //Location of "RESUME"
-    SDL_Rect quit = {(WIDTH/2)-(menuWidth/5)+5, HEIGHT-menuHeight+300, 200, 100}; //Location of "QUIT"
+    SDL_Rect pause = {(WIDTH/2)-200, (HEIGHT/2)-(menuHeight/2)+25, 400, 140}; //Location of "GAME PAUSED"
+    SDL_Rect resume = {(WIDTH/2)-100, (HEIGHT/2)-50, 200, 100}; //Location of "RESUME"
+    SDL_Rect quit = {(WIDTH/2)-100, (HEIGHT/2)+100, 200, 100}; //Location of "QUIT"
     SDL_RenderCopy(renderer, pauseText, nullptr, &pause); //Render "GAME PAUSED" to the screen
     SDL_RenderCopy(renderer, resumeText, nullptr, &resume); //Render "RESUME" to the screen
     SDL_RenderCopy(renderer, quitText, nullptr, &quit); //Render "QUIT" to the screen
@@ -194,6 +194,8 @@ bool selectionMenu(SDL_Renderer* renderer, TTF_Font* font, std::function<void(SD
         {
             switch(event.type)
             {
+                case SDL_MOUSEBUTTONDOWN:
+                    {return selection;}
                 case SDL_QUIT:
                     {return selection;}
                 case SDL_KEYDOWN:
@@ -217,7 +219,22 @@ bool selectionMenu(SDL_Renderer* renderer, TTF_Font* font, std::function<void(SD
                             break;
                         }
                     }
-               }
+                    break;
+                }
+                case SDL_MOUSEMOTION:
+                {
+                    int xPos = event.motion.x;
+                    int yPos = event.motion.y;
+                    if(xPos > (WIDTH/2)-100 and xPos < (WIDTH/2)+100)
+                    {
+                        if(yPos > (HEIGHT/2)-50 and yPos < (HEIGHT/2)+50)
+                            {selection = true;}
+                        else if(yPos > (HEIGHT/2)+100 and yPos < (HEIGHT/2)+200)
+                            {selection = false;}
+                        func(renderer, font, selection);
+                    }
+                    break;
+                }
             }
         }
     }

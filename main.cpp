@@ -2,7 +2,7 @@
 
 int main()
 {
-    int frameTime, xLocation = WIDTH/2, yLocation = HEIGHT/2;
+    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
     long long score = loadHighScore();
     Uint64 frameStart;
     bool running = true;
@@ -25,8 +25,8 @@ int main()
         SDL_Event event;
         while(SDL_PollEvent(&event))
         {
-            xLocation = event.motion.x;
-            yLocation = event.motion.y;
+            xPos = event.motion.x;
+            yPos = event.motion.y;
             switch(event.type)
             {
                 case SDL_QUIT:
@@ -39,7 +39,7 @@ int main()
                 }
                 case SDL_MOUSEBUTTONDOWN:
                 {
-                    if(checkClick(xLocation, yLocation))
+                    if(checkClick(xPos, yPos))
                         {score += 1;}
                     break;
                 }
@@ -49,7 +49,7 @@ int main()
         SDL_SetRenderDrawColor(renderer, 0,0,0,0);
         SDL_RenderClear(renderer);
         drawButton(renderer);
-        drawSideBays(renderer, font, xLocation, yLocation);
+        drawSideBays(renderer, font, xPos, yPos);
         drawScore(renderer, font, score);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;
