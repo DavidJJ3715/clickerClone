@@ -3,9 +3,14 @@
 int main()
 {
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    long long score = loadHighScore();
+    std::tuple<long long, std::string> loadTuple = loadHighScore();
+    long long score = std::get<0>(loadTuple);
+    std::string upgradeString = std::get<1>(loadTuple);
     Uint64 frameStart;
     bool running = true;
+    std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
+    for (int i=1; i<9; i++) 
+        {std::cout << i << ": " << upgrades[i] << "\n";}
 
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
@@ -15,7 +20,7 @@ int main()
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
 
-    std::thread saveThread(periodicSave, std::ref(score), std::ref(running));
+    std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running));
 
     while(running)
     {
@@ -61,7 +66,7 @@ int main()
     drawSaveScreen(renderer, font);
     if(saveThread.joinable())
         {saveThread.join();}
-    saveHighScore(score);
+    saveHighScore(score, bundleMap(upgrades));
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

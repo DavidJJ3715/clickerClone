@@ -3,12 +3,13 @@
 #define SDL_MAIN_HANDLED
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <random>
 #include <tuple>
 #include <memory>
 #include <optional>
 #include <chrono>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <fstream>
 #include <thread>
@@ -23,31 +24,35 @@
 *********************************/
 const int WIDTH = 1200, HEIGHT = 800, frameDelay = 10;
 std::mutex scoreLock;
+std::string bundleMap(std::unordered_map<int,int> upgrades); //Function prototype
 
 /********************************
 *       Save Functions          *
 *********************************/
-void saveHighScore(long long score)
+void saveHighScore(long long score, std::string upgradeString)
 {
     std::ofstream scoreFile("save.txt");
-    scoreFile << score;
+    scoreFile << score << "\n";
+    scoreFile << upgradeString;
 }
 
-long long loadHighScore()
+std::tuple<long long, std::string> loadHighScore()
 {
     long long score = 0;
+    std::string upgradeString;
     std::ifstream scoreFile("save.txt");
     scoreFile >> score;
-    return score;
+    scoreFile >> upgradeString;
+    return std::make_tuple(score, upgradeString);
 }
 
-void periodicSave(long long& score, bool& running)
+void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& running)
 {
     while(running)
     {
         {
             std::lock_guard<std::mutex> lock(scoreLock);
-            saveHighScore(score);
+            saveHighScore(score, bundleMap(upgrades));
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -61,6 +66,33 @@ bool checkClick(int x, int y)
     if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))
         {return true;}
     return false;
+}
+
+std::unordered_map<int,int> parseUpgrades(std::string upgradeString)
+{
+    std::stringstream ss(upgradeString);
+    std::string temp;
+    std::unordered_map<int,int> map;
+    int counter = 1;
+
+    while(std::getline(ss, temp, '+'))
+    {
+        map.emplace(counter, std::stoi(temp));
+        counter++;
+    }
+    return map;
+}
+
+std::string bundleMap(std::unordered_map<int,int> upgrades)
+{
+    std::string bundle;
+    bundle.append(std::to_string(upgrades[1]));
+    for(int i=2; i<9; i++)
+    {
+        bundle.append("+");
+        bundle.append(std::to_string(upgrades[i]));
+    }
+    return bundle;
 }
 
 /********************************
