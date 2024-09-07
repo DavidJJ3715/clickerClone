@@ -3,7 +3,6 @@
 
 int main()
 {
-    //! https://integers.info/large-numbers/googol
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
@@ -52,6 +51,11 @@ int main()
                     int clickVal = checkClick(xPos, yPos);
                     if(clickVal == 0)
                         {score += 1;}
+                    else if(clickVal > 0 and clickVal < 9)
+                    {
+                        upgradeShop(shopStorage[clickVal-1],score);
+                        upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
+                    }
                     break;
                 }
             }

@@ -20,6 +20,13 @@
 #include "../SDL2/include/SDL2/SDL_ttf.h"
 #include "../SDL2/include/SDL2/SDL_image.h"
 
+//! https://integers.info/large-numbers/googol
+
+/********************************
+*       Function Prototypes     *
+*********************************/
+std::string bundleMap(std::unordered_map<int,int>);
+
 /********************************
 *       Global Variables        *
 *********************************/
@@ -29,10 +36,11 @@ std::unordered_map<int,std::string> labelMap =
 { 
     {0,""},{3,"Thousand"},{6,"Million"},{9,"Billion"},{12,"Trillion"},
     {15,"Quadrillion"},{18,"Quintillion"},{21,"Sextillion"},{24,"Septillion"},
-    {27,"Octillion"},{30,"Nonillion"},
+    {27,"Octillion"},{30,"Nonillion"},{33,"Decillion"},{36,"Undecillion"},
+    {39,"Duodecillion"},{42,"Tredecillion"},{45,"Quattuordecillion"},
+    {48,"Quindecillion"},{51,"Sexdecillion"},{54,"Septendecillion"},
+    {57,"Octodecillion"},{60,"Novemdecillion"},{63,"Vigintillion"},
 };
-
-std::string bundleMap(std::unordered_map<int,int> upgrades); //Function prototype
 
 /********************************
 *       Save Functions          *
@@ -57,7 +65,7 @@ std::tuple<long long, std::string, int> loadHighScore()
     return std::make_tuple(score, upgradeString, zeroCount);
 }
 
-void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& running, int zeroCount)
+void periodicSave(long long& score, std::unordered_map<int,int>& upgrades, bool& running, int zeroCount)
 {
     while(running)
     {
@@ -74,12 +82,39 @@ void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& 
 *********************************/
 int checkClick(int x, int y)
 {
+    int retVal = -1;
     if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))
         {return 0;}
-    return -1; //!Check which upgrade box was clicked and return it to main
+    else if(x > WIDTH-(WIDTH/3))
+    {
+        switch(y)
+        {
+            case 0 ... 99:
+                retVal = 1; break;
+            case 100 ... 199:
+                retVal = 2; break;
+            case 200 ... 299:
+                retVal = 3; break;
+            case 300 ... 399:
+                retVal = 4; break;
+            case 400 ... 499:
+                retVal = 5; break;
+            case 500 ... 599:
+                retVal = 6; break;
+            case 600 ... 699:
+                retVal = 7; break;
+            case 700 ... 800:
+                retVal = 8; break;
+        }
+    }
+    return retVal; 
 }
 
-//? Template function that takes a shop object
+template<typename shopType>
+void upgradeShop(std::shared_ptr<shopType>& shop, long long score)
+{
+    shop->shopLevel += 1;
+}
 
 std::unordered_map<int,int> parseUpgrades(std::string upgradeString)
 {
