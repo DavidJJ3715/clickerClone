@@ -3,14 +3,7 @@
 
 int main()
 {
-    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    std::tuple<long long, std::string> loadTuple = loadHighScore();
-    long long score = std::get<0>(loadTuple);
-    std::string upgradeString = std::get<1>(loadTuple);
-    Uint64 frameStart;
-    bool running = true;
-    std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
-
+    //! https://integers.info/large-numbers/googol
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
     IMG_Init(IMG_INIT_PNG);
@@ -19,7 +12,21 @@ int main()
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
 
-    std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running));
+    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
+    auto[score, upgradeString, zeroCount] = loadHighScore();
+    Uint64 frameStart;
+    bool running = true;
+    std::string label = labelMap[zeroCount];
+   
+    std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
+    std::vector<std::shared_ptr<shop>> shopStorage;
+
+    std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running), std::ref(zeroCount));
+    for(int i=1;i<9;i++)
+    {
+        std::shared_ptr<shop> temp(new shop(upgrades[i],i));
+        shopStorage.push_back(temp);
+    }
 
     while(running)
     {
@@ -54,7 +61,7 @@ int main()
         SDL_RenderClear(renderer);
         drawButton(renderer);
         drawSideBays(renderer, font, xPos, yPos);
-        drawScore(renderer, font, score);
+        drawScore(renderer, font, score, label);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;
         if(frameDelay > frameTime)
@@ -65,7 +72,7 @@ int main()
     drawSaveScreen(renderer, font);
     if(saveThread.joinable())
         {saveThread.join();}
-    saveHighScore(score, bundleMap(upgrades));
+    saveHighScore(score, bundleMap(upgrades), zeroCount);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

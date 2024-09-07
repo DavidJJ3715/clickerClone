@@ -15,7 +15,7 @@
 #include <thread>
 #include <functional>
 #include <mutex>
-#include <limits.h>
+#include <climits>
 #include "../SDL2/include/SDL2/SDL.h"
 #include "../SDL2/include/SDL2/SDL_ttf.h"
 #include "../SDL2/include/SDL2/SDL_image.h"
@@ -25,35 +25,45 @@
 *********************************/
 const int WIDTH = 1200, HEIGHT = 800, frameDelay = 10;
 std::mutex scoreLock;
+std::unordered_map<int,std::string> labelMap =
+{ 
+    {0,""},{3,"Thousand"},{6,"Million"},{9,"Billion"},{12,"Trillion"},
+    {15,"Quadrillion"},{18,"Quintillion"},{21,"Sextillion"},{24,"Septillion"},
+    {27,"Octillion"},{30,"Nonillion"},
+};
+
 std::string bundleMap(std::unordered_map<int,int> upgrades); //Function prototype
 
 /********************************
 *       Save Functions          *
 *********************************/
-void saveHighScore(long long score, std::string upgradeString)
+void saveHighScore(long long score, std::string upgradeString, int zeroCount)
 {
     std::ofstream scoreFile("save.txt");
     scoreFile << score << "\n";
+    scoreFile << zeroCount << "\n";
     scoreFile << upgradeString;
 }
 
-std::tuple<long long, std::string> loadHighScore()
+std::tuple<long long, std::string, int> loadHighScore()
 {
     long long score = 0;
+    int zeroCount = 0;
     std::string upgradeString;
     std::ifstream scoreFile("save.txt");
     scoreFile >> score;
+    scoreFile >> zeroCount;
     scoreFile >> upgradeString;
-    return std::make_tuple(score, upgradeString);
+    return std::make_tuple(score, upgradeString, zeroCount);
 }
 
-void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& running)
+void periodicSave(long long& score, std::unordered_map<int,int> upgrades, bool& running, int zeroCount)
 {
     while(running)
     {
         {
             std::lock_guard<std::mutex> lock(scoreLock);
-            saveHighScore(score, bundleMap(upgrades));
+            saveHighScore(score, bundleMap(upgrades), zeroCount);
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -110,19 +120,23 @@ void drawButton(SDL_Renderer* renderer)
     // SDL_RenderDrawRect(renderer, &tester);
 }
 
-void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score)
+void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score, std::string label)
 {
-    char scoreString[100];
-    sprintf(scoreString, "Score: %lld", score);
+    char scoreString[128];
+    sprintf(scoreString, "%lld", score);
 
     SDL_Rect textBox = {(WIDTH/2)-100, 50, 200, 50};
+    SDL_Rect labelBox = {(WIDTH/2)-100, 100, 200, 50};
     SDL_Surface* surface = TTF_RenderText_Solid(font, scoreString, {255,255,255,0});
     SDL_Texture* scoreText = SDL_CreateTextureFromSurface(renderer, surface);
+    surface = TTF_RenderText_Solid(font, label.c_str(), {255,255,255,0});
+    SDL_Texture* labelText = SDL_CreateTextureFromSurface(renderer, surface);
 
     SDL_SetRenderDrawColor(renderer, 0,0,0,0);
     SDL_RenderFillRect(renderer, &textBox);
     SDL_SetRenderDrawColor(renderer, 255,255,255,255);
     SDL_RenderCopy(renderer, scoreText, nullptr, &textBox);
+    SDL_RenderCopy(renderer, labelText, nullptr, &labelBox);
     
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(scoreText);
@@ -181,9 +195,21 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
     }
 }
 
+template<typename shopType>
+void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList)
+{
+    for(auto i=0; i<shopList.size(); i++)
+    {
+        char levelString[128];
+        sprintf(levelString, "%d", shopList[1]->shopLevel);
+        
+        SDL_Rect box = {WIDTH-30,i*(HEIGHT/8),25,25};
+    }
+}
+
 void drawSaveScreen(SDL_Renderer* renderer, TTF_Font* font)
 {
-    char message[10];
+    char message[16];
     sprintf(message, "Saving Please Wait");
 
     SDL_Rect textRect = {(WIDTH/2)-300,(HEIGHT/2)-150,600,300};
