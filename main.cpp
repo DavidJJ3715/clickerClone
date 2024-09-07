@@ -61,6 +61,7 @@ int main()
         SDL_RenderClear(renderer);
         drawButton(renderer);
         drawSideBays(renderer, font, xPos, yPos);
+        drawShopLevels(renderer, font, shopStorage, xPos);
         drawScore(renderer, font, score, label);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;

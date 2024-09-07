@@ -125,8 +125,8 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, long long score, std::str
     char scoreString[128];
     sprintf(scoreString, "%lld", score);
 
-    SDL_Rect textBox = {(WIDTH/2)-100, 50, 200, 50};
-    SDL_Rect labelBox = {(WIDTH/2)-100, 100, 200, 50};
+    SDL_Rect textBox = {(WIDTH/2)-100, 75, 200, 100};
+    SDL_Rect labelBox = {(WIDTH/2)-100, 165, 200, 100};
     SDL_Surface* surface = TTF_RenderText_Solid(font, scoreString, {255,255,255,0});
     SDL_Texture* scoreText = SDL_CreateTextureFromSurface(renderer, surface);
     surface = TTF_RenderText_Solid(font, label.c_str(), {255,255,255,0});
@@ -196,14 +196,31 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
 }
 
 template<typename shopType>
-void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList)
+void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, int xPos)
 {
-    for(auto i=0; i<shopList.size(); i++)
+    bool showLevels = false;
+    char levelString[128];
+
+    if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
+        {showLevels = true;}
+
+    if(showLevels)
     {
-        char levelString[128];
-        sprintf(levelString, "%d", shopList[1]->shopLevel);
-        
-        SDL_Rect box = {WIDTH-30,i*(HEIGHT/8),25,25};
+        for(uint64_t i=0; i<shopList.size(); i++)
+        {
+            levelString[0] = '\0';
+            sprintf(levelString, "%d", shopList[i]->shopLevel);
+            
+            SDL_Rect box = {WIDTH-40,int(i)*(HEIGHT/8),35,35};
+            SDL_Surface* surface = TTF_RenderText_Solid(font, levelString, {255,255,255,0});
+            SDL_Texture* writing = SDL_CreateTextureFromSurface(renderer, surface);
+
+            SDL_SetRenderDrawColor(renderer,0,0,0,0);
+            SDL_RenderCopy(renderer, writing, nullptr, &box);
+
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(writing);
+        }
     }
 }
 
