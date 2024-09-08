@@ -9,7 +9,7 @@ class shop
         shop(int,int);
         void upgrade();
         int shopLevel;
-        bigInt cost;
+        bigInt cost = 10;
 
     private:
         std::string pngPath = "./spritePNGs/shop", fileType = ".png";

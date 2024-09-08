@@ -10,7 +10,6 @@ int main()
     SDL_Window* window = SDL_CreateWindow("Clicker Clone", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
-
     
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
     auto[score, upgradeString] = loadSaveFile();
@@ -21,7 +20,6 @@ int main()
     std::vector<std::shared_ptr<shop>> shopStorage;
 
     std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades));
-    // std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running), std::ref(zeroCount));
     for(int i=1;i<9;i++)
     {
         std::shared_ptr<shop> temp(new shop(upgrades[i],i));

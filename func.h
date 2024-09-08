@@ -1,22 +1,23 @@
 #ifndef _func_
 #define _func_
 #define SDL_MAIN_HANDLED
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <random>
-#include <tuple>
-#include <memory>
-#include <optional>
+#include <algorithm>
 #include <chrono>
+#include <climits>
+#include <cmath>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <random>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
-#include <fstream>
-#include <thread>
-#include <functional>
-#include <mutex>
-#include <climits>
-#include <algorithm>
 #include "../boost_1_86_0/boost/multiprecision/cpp_int.hpp"
 #include "../SDL2/include/SDL2/SDL.h"
 #include "../SDL2/include/SDL2/SDL_ttf.h"
@@ -35,15 +36,6 @@ std::string bundleMap(std::unordered_map<int,int>);
 using bigInt = boost::multiprecision::cpp_int;
 const int WIDTH = 1200, HEIGHT = 800, frameDelay = 10;
 std::mutex scoreLock;
-std::unordered_map<int,std::string> labelMap =
-{ 
-    {0,""},{3,"Thousand"},{6,"Million"},{9,"Billion"},{12,"Trillion"},
-    {15,"Quadrillion"},{18,"Quintillion"},{21,"Sextillion"},{24,"Septillion"},
-    {27,"Octillion"},{30,"Nonillion"},{33,"Decillion"},{36,"Undecillion"},
-    {39,"Duodecillion"},{42,"Tredecillion"},{45,"Quattuordecillion"},
-    {48,"Quindecillion"},{51,"Sexdecillion"},{54,"Septendecillion"},
-    {57,"Octodecillion"},{60,"Novemdecillion"},{63,"Vigintillion"},
-};
 
 /********************************
 *       Save Functions          *
@@ -113,7 +105,7 @@ int checkClick(int x, int y)
 template<typename shopType>
 void upgradeShop(std::shared_ptr<shopType>& shop, bigInt& score)
 {
-    if(score > shop->cost)
+    if(score >= shop->cost)
     {
         score = score-shop->cost;
         shop->upgrade();
@@ -147,6 +139,46 @@ std::string bundleMap(std::unordered_map<int,int> upgrades)
     return bundle;
 }
 
+std::string giveLabel(bigInt score)
+{
+    switch(score.str().size()-1)
+    {
+        case 3  ...  5: return "Thousand";
+        case 6  ...  8: return "Million";
+        case 9  ... 11: return "Billion";
+        case 12 ... 14: return "Trillion";
+        case 15 ... 17: return "Quadrillion";
+        case 18 ... 20: return "Quintillion";
+        case 21 ... 23: return "Sextillion";
+        case 24 ... 26: return "Septillion";
+        case 27 ... 29: return "Octillion";
+        case 30 ... 32: return "Nonillion";
+        case 33 ... 35: return "Decillion";
+        case 36 ... 38: return "Undecillion";
+        case 39 ... 41: return "Duodecillion";
+        case 42 ... 44: return "Tredecillion";
+        case 45 ... 47: return "Quattuordecillion";
+        case 48 ... 50: return "Quindecillion";
+        case 51 ... 53: return "Sexdecillion";
+        case 54 ... 56: return "Septendecillion";
+        case 57 ... 59: return "Octodecillion";
+        case 60 ... 62: return "Novemdecillion";
+        case 63 ... 65: return "Vigintillion";
+        case 66 ... 68: return "Unvigintillion";
+        case 69 ... 71: return "Duovigintillion";
+        case 72 ... 74: return "Trevigintillion";
+        case 75 ... 77: return "Quattuorvigintillion";
+        case 78 ... 80: return "Quinvigintillion";
+        case 81 ... 83: return "Sexvigintillion";
+        case 84 ... 86: return "Septenvigintillion";
+        case 87 ... 89: return "Octovigintillion";
+        case 90 ... 92: return "Novemvigintillion";
+        case 93 ... 95: return "Trigintillion";
+        case 96 ... 98: return "Untrigintillion";
+    }
+    return "";
+}
+
 /********************************
 *       Draw Functions          *
 *********************************/
@@ -159,15 +191,33 @@ void drawButton(SDL_Renderer* renderer)
 
 void drawScore(SDL_Renderer* renderer, TTF_Font* font, bigInt score)
 {
-    char scoreString[128];
-    sprintf(scoreString, score.str().c_str());
-
+    std::string scoreString = "";
     SDL_Rect textBox = {(WIDTH/2)-100, 75, 200, 100};
     SDL_Rect labelBox = {(WIDTH/2)-100, 165, 200, 100};
-    SDL_Surface* surface = TTF_RenderText_Solid(font, scoreString, {255,255,255,0});
+
+    if(score < 1000)
+        {scoreString = score.str();}
+    else
+    {
+        switch(score.str().size()%3)
+        {
+            case 0:
+                scoreString.append(score.str().substr(0,3)).append(".").append(score.str().substr(3,3));
+                break;
+            case 1:
+                scoreString.append(score.str().substr(0,1)).append(".").append(score.str().substr(1,3));
+                break;
+            case 2:
+                scoreString.append(score.str().substr(0,2)).append(".").append(score.str().substr(2,3));
+                break;
+        }
+        
+    }
+
+    SDL_Surface* surface = TTF_RenderText_Solid(font, scoreString.c_str(), {255,255,255,0});
     SDL_Texture* scoreText = SDL_CreateTextureFromSurface(renderer, surface);
-    surface = TTF_RenderText_Solid(font, "", {255,255,255,0});
-    SDL_Texture* labelText = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Surface* surface2 = TTF_RenderText_Solid(font, giveLabel(score).c_str(), {255,255,255,0});
+    SDL_Texture* labelText = SDL_CreateTextureFromSurface(renderer, surface2);
 
     SDL_SetRenderDrawColor(renderer, 0,0,0,0);
     SDL_RenderFillRect(renderer, &textBox);
@@ -176,7 +226,9 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, bigInt score)
     SDL_RenderCopy(renderer, labelText, nullptr, &labelBox);
     
     SDL_FreeSurface(surface);
+    SDL_FreeSurface(surface2);
     SDL_DestroyTexture(scoreText);
+    SDL_DestroyTexture(labelText);
 }
 
 void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
@@ -235,13 +287,8 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
 template<typename shopType>
 void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, int xPos)
 {
-    bool showLevels = false;
     char levelString[128];
-
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
-        {showLevels = true;}
-
-    if(showLevels)
     {
         for(uint64_t i=0; i<shopList.size(); i++)
         {
@@ -258,6 +305,15 @@ void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::sha
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(writing);
         }
+    }
+}
+
+template<typename shopType>
+void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, int xPos)
+{
+    if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
+    {
+
     }
 }
 
