@@ -11,16 +11,17 @@ int main()
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
 
+    
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    auto[score, upgradeString, zeroCount] = loadHighScore();
+    auto[score, upgradeString] = loadSaveFile();
     Uint64 frameStart;
     bool running = true;
-    std::string label = labelMap[zeroCount];
    
     std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
     std::vector<std::shared_ptr<shop>> shopStorage;
 
-    std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running), std::ref(zeroCount));
+    std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades));
+    // std::thread saveThread(periodicSave, std::ref(score), std::ref(upgrades), std::ref(running), std::ref(zeroCount));
     for(int i=1;i<9;i++)
     {
         std::shared_ptr<shop> temp(new shop(upgrades[i],i));
@@ -53,7 +54,7 @@ int main()
                         {score += 1;}
                     else if(clickVal > 0 and clickVal < 9)
                     {
-                        upgradeShop(shopStorage[clickVal-1],score);
+                        upgradeShop(shopStorage[clickVal-1], score);
                         upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
                     }
                     break;
@@ -66,7 +67,7 @@ int main()
         drawButton(renderer);
         drawSideBays(renderer, font, xPos, yPos);
         drawShopLevels(renderer, font, shopStorage, xPos);
-        drawScore(renderer, font, score, label);
+        drawScore(renderer, font, score);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;
         if(frameDelay > frameTime)
@@ -77,7 +78,8 @@ int main()
     drawSaveScreen(renderer, font);
     if(saveThread.joinable())
         {saveThread.join();}
-    saveHighScore(score, bundleMap(upgrades), zeroCount);
+    logSaveData(score.str(), bundleMap(upgrades));
+    // saveHighScore(score, bundleMap(upgrades), zeroCount);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
