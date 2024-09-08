@@ -77,7 +77,6 @@ int main()
     if(saveThread.joinable())
         {saveThread.join();}
     logSaveData(score.str(), bundleMap(upgrades));
-    // saveHighScore(score, bundleMap(upgrades), zeroCount);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

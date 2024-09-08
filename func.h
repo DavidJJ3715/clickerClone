@@ -247,22 +247,14 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
     {
         switch(yPos)
         {
-            case 0 ... 99:
-                heightVal = 0; break;
-            case 100 ... 199:
-                heightVal = 100; break;
-            case 200 ... 299:
-                heightVal = 200; break;
-            case 300 ... 399:
-                heightVal = 300; break;
-            case 400 ... 499:
-                heightVal = 400; break;
-            case 500 ... 599:
-                heightVal = 500; break;
-            case 600 ... 699:
-                heightVal = 600; break;
-            case 700 ... 800:
-                heightVal = 700; break;
+            case 0   ...  99: heightVal =   0; break;
+            case 100 ... 199: heightVal = 100; break;
+            case 200 ... 299: heightVal = 200; break;
+            case 300 ... 399: heightVal = 300; break;
+            case 400 ... 499: heightVal = 400; break;
+            case 500 ... 599: heightVal = 500; break;
+            case 600 ... 699: heightVal = 600; break;
+            case 700 ... 800: heightVal = 700; break;
         }
 
         SDL_SetRenderDrawColor(renderer, 0,0,0,0);
@@ -313,7 +305,7 @@ void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shar
 {
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
     {
-
+        
     }
 }
 
