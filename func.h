@@ -75,32 +75,25 @@ void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrade
 *********************************/
 int checkClick(int x, int y)
 {
-    int retVal = -1;
     if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))
         {return 0;}
     else if(x > WIDTH-(WIDTH/3))
     {
         switch(y)
         {
-            case 0 ... 99:
-                retVal = 1; break;
-            case 100 ... 199:
-                retVal = 2; break;
-            case 200 ... 299:
-                retVal = 3; break;
-            case 300 ... 399:
-                retVal = 4; break;
-            case 400 ... 499:
-                retVal = 5; break;
-            case 500 ... 599:
-                retVal = 6; break;
-            case 600 ... 699:
-                retVal = 7; break;
-            case 700 ... 800:
-                retVal = 8; break;
+            case 0   ...  99: return 1;
+            case 100 ... 199: return 2;
+            case 200 ... 299: return 3;
+            case 300 ... 349: return x > WIDTH-(WIDTH/3)+50 ? 4 : 10;
+            case 350 ... 399: return x > WIDTH-(WIDTH/3)+50 ? 4 : 11;
+            case 400 ... 449: return x > WIDTH-(WIDTH/3)+50 ? 5 : 12;
+            case 450 ... 499: return x > WIDTH-(WIDTH/3)+50 ? 5 : 13;
+            case 500 ... 599: return 6;
+            case 600 ... 699: return 7;
+            case 700 ... 800: return 8;
         }
     }
-    return retVal; 
+    return -1; 
 }
 
 template<typename shopType>
@@ -238,17 +231,21 @@ void drawScore(SDL_Renderer* renderer, TTF_Font* font, bigInt score)
 
 void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
 {
-    bool menu = true;
+    bool rightMenu = false, leftMenu = false;
     int widthVal = -1, heightVal = -1;
 
     if(xPos > 0 and xPos < WIDTH/3) 
-        {widthVal = 0;}
+    {
+        leftMenu = true;
+        widthVal = 0;
+    }
     else if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH) 
-        {widthVal = WIDTH-(WIDTH/3);}
-    else
-        {menu = false;}
+    {
+        rightMenu = true;
+        widthVal = WIDTH-(WIDTH/3);
+    }
     
-    if(menu)
+    if(leftMenu or rightMenu)
     {
         switch(yPos)
         {
@@ -271,12 +268,59 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
         SDL_RenderDrawRect(renderer, &box);
         for(int i=1; i<8; i++)
             {SDL_RenderDrawLine(renderer, widthVal, i*(HEIGHT/8), widthVal+WIDTH/3, i*(HEIGHT/8));}
-
-        SDL_SetRenderDrawColor(renderer,212,175,55,0); //Gold color for border
-        for(int i=0; i<5; i++)
+        
+        if(rightMenu)
         {
-            SDL_Rect goldBox = {widthVal+i, heightVal+i, (WIDTH/3)-2*i, 100-2*i};
-            SDL_RenderDrawRect(renderer, &goldBox);
+            for(int i=1; i<5; ++i)
+            {
+                std::string multString;
+                switch(i%4)
+                {
+                    case 1: multString =   "1"; break;
+                    case 2: multString =  "10"; break;
+                    case 3: multString = "100"; break;
+                    case 0: multString = "Max"; break;
+                }
+                SDL_Rect multBox = {widthVal, ((i-1)*50)+HEIGHT/2-100, 50, 50};
+                SDL_Rect textBox = {widthVal+5, ((i-1)*50)+HEIGHT/2-95, 40, 40};
+                SDL_RenderDrawRect(renderer, &multBox);
+
+                SDL_Surface* surface = TTF_RenderUTF8_Blended(font, multString.c_str(), {255,255,255,0});
+                SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+                SDL_RenderCopy(renderer, texture, nullptr, &textBox);
+
+                SDL_FreeSurface(surface);
+                SDL_DestroyTexture(texture);
+            }
+        }
+        
+        SDL_SetRenderDrawColor(renderer,212,175,55,0); //Gold color for border
+        SDL_Rect goldBox;
+        if(rightMenu)
+        {
+            for(int i=0; i<5; i++)
+            {
+                if((heightVal >= 300 and heightVal < 500) and (xPos > WIDTH-(WIDTH/3)+50))
+                    {goldBox = {(widthVal+50)+i, heightVal+i, ((WIDTH/3)-50)-2*i, 100-2*i};}
+                else if(heightVal < 300 or heightVal > 400)
+                    {goldBox = {widthVal+i, heightVal+i, (WIDTH/3)-2*i, 100-2*i};}
+                else
+                {
+                    if(yPos-heightVal < 50)
+                        {goldBox = {widthVal+i, heightVal+i, 50-2*i, 50-2*i};}
+                    else
+                        {goldBox = {widthVal+i, heightVal+50+i, 50-2*i, 50-2*i};}
+                }
+                SDL_RenderDrawRect(renderer, &goldBox);
+            }
+        }
+        else
+        {
+            for(int i=0; i<5; i++)
+            {
+                goldBox = {widthVal+i, heightVal+i, (WIDTH/3)-2*i, 100-2*i};
+                SDL_RenderDrawRect(renderer, &goldBox);
+            }
         }
     }
 }

@@ -48,6 +48,7 @@ int main()
                 case SDL_MOUSEBUTTONDOWN:
                 {
                     int clickVal = checkClick(xPos, yPos);
+                    std::cout << "Clicked: " << clickVal << "\n";
                     if(clickVal == 0)
                         {score += scorePerClick;}
                     else if(clickVal > 0 and clickVal < 9)
