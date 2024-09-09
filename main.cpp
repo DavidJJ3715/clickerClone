@@ -54,8 +54,6 @@ int main()
                     {
                         upgradeShop(shopStorage[clickVal-1], score);
                         upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
-                        std::cout << "Cost for 10: " << shopStorage[clickVal-1]->seeAhead(10) << "\n";
-                        std::cout << "Cost for 100: " << shopStorage[clickVal-1]->seeAhead(100) << "\n";
                         //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
                         //!     Establish a thread for giving score per second
                     }
