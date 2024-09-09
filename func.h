@@ -40,30 +40,31 @@ std::mutex scoreLock;
 /********************************
 *       Save Functions          *
 *********************************/
-void logSaveData(std::string scoreString, std::string upgradeString)
+void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick)
 {
     std::ofstream scoreFile("save.txt");
     scoreFile << scoreString << "\n";
-    scoreFile << upgradeString;
+    scoreFile << upgradeString << "\n";
+    scoreFile << scorePerClick;
 }
 
-std::tuple<bigInt,std::string> loadSaveFile()
+std::tuple<bigInt,std::string, bigInt> loadSaveFile()
 {
-    std::string scoreString;
-    std::string upgradeString;
+    std::string scoreString, upgradeString, scorePerClick;
     std::ifstream scoreFile("save.txt");
     scoreFile >> scoreString;
     scoreFile >> upgradeString;
-    return std::make_tuple(bigInt(scoreString),upgradeString);
+    scoreFile >> scorePerClick;
+    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick));
 }
 
-void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades)
+void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick)
 {
     while(running)
     {
         {
             std::lock_guard<std::mutex> lock(scoreLock);
-            logSaveData(score.str(),bundleMap(upgrades));
+            logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str());
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -179,6 +180,29 @@ std::string giveLabel(bigInt score)
     return "";
 }
 
+std::string formatNumString(bigInt value)
+{
+    std::string valString;
+    if(value < 1000)
+        {valString = value.str();}
+    else
+    {
+        switch(value.str().size()%3)
+        {
+            case 0:
+                valString.append(value.str().substr(0,3)).append(".").append(value.str().substr(3,3));
+                break;
+            case 1:
+                valString.append(value.str().substr(0,1)).append(".").append(value.str().substr(1,3));
+                break;
+            case 2:
+                valString.append(value.str().substr(0,2)).append(".").append(value.str().substr(2,3));
+                break;
+        }
+    }
+    return valString;
+}
+
 /********************************
 *       Draw Functions          *
 *********************************/
@@ -191,32 +215,13 @@ void drawButton(SDL_Renderer* renderer)
 
 void drawScore(SDL_Renderer* renderer, TTF_Font* font, bigInt score)
 {
-    std::string scoreString = "";
+    std::string scoreString = formatNumString(score);
     SDL_Rect textBox = {(WIDTH/2)-100, 75, 200, 100};
     SDL_Rect labelBox = {(WIDTH/2)-100, 165, 200, 100};
 
-    if(score < 1000)
-        {scoreString = score.str();}
-    else
-    {
-        switch(score.str().size()%3)
-        {
-            case 0:
-                scoreString.append(score.str().substr(0,3)).append(".").append(score.str().substr(3,3));
-                break;
-            case 1:
-                scoreString.append(score.str().substr(0,1)).append(".").append(score.str().substr(1,3));
-                break;
-            case 2:
-                scoreString.append(score.str().substr(0,2)).append(".").append(score.str().substr(2,3));
-                break;
-        }
-        
-    }
-
-    SDL_Surface* surface = TTF_RenderText_Solid(font, scoreString.c_str(), {255,255,255,0});
+    SDL_Surface* surface = TTF_RenderUTF8_Blended(font, scoreString.c_str(), {255,255,255,0});
     SDL_Texture* scoreText = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Surface* surface2 = TTF_RenderText_Solid(font, giveLabel(score).c_str(), {255,255,255,0});
+    SDL_Surface* surface2 = TTF_RenderUTF8_Blended(font, giveLabel(score).c_str(), {255,255,255,0});
     SDL_Texture* labelText = SDL_CreateTextureFromSurface(renderer, surface2);
 
     SDL_SetRenderDrawColor(renderer, 0,0,0,0);
@@ -288,7 +293,7 @@ void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::sha
             sprintf(levelString, "%d", shopList[i]->shopLevel);
             
             SDL_Rect box = {WIDTH-40,int(i)*(HEIGHT/8),35,35};
-            SDL_Surface* surface = TTF_RenderText_Solid(font, levelString, {255,255,255,0});
+            SDL_Surface* surface = TTF_RenderUTF8_Blended(font, levelString, {255,255,255,0});
             SDL_Texture* writing = SDL_CreateTextureFromSurface(renderer, surface);
 
             SDL_SetRenderDrawColor(renderer,0,0,0,0);
@@ -305,7 +310,24 @@ void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shar
 {
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
     {
-        
+        for(uint64_t i=0; i<shopList.size(); i++)
+        {
+            int tWidth = 0, tHeight = 0;
+            std::string costString = formatNumString(shopList[i]->cost);
+            costString.append(" ").append(giveLabel(shopList[i]->cost));
+
+            TTF_SizeUTF8(font, costString.c_str(), &tWidth, &tHeight);
+            int finalTextWidth = (tWidth > WIDTH/6) ? WIDTH/6 : tWidth;
+            SDL_Rect box = {WIDTH-finalTextWidth-5,(int(i)*HEIGHT/8)+65,finalTextWidth,35};
+            SDL_Surface* surface = TTF_RenderUTF8_Blended(font, costString.c_str(),{255,255,255,0});
+            SDL_Texture* costText = SDL_CreateTextureFromSurface(renderer, surface);
+
+            SDL_SetRenderDrawColor(renderer,0,0,0,0);
+            SDL_RenderCopy(renderer, costText, nullptr, &box);
+
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(costText);
+        }
     }
 }
 
@@ -315,7 +337,7 @@ void drawSaveScreen(SDL_Renderer* renderer, TTF_Font* font)
     sprintf(message, "Saving Please Wait");
 
     SDL_Rect textRect = {(WIDTH/2)-300,(HEIGHT/2)-150,600,300};
-    SDL_Surface* surface = TTF_RenderText_Solid(font, message, {255,255,255,0});
+    SDL_Surface* surface = TTF_RenderUTF8_Blended(font, message, {255,255,255,0});
     SDL_Texture* writing = SDL_CreateTextureFromSurface(renderer, surface);
 
     SDL_SetRenderDrawColor(renderer,0,0,0,0);

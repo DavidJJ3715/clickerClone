@@ -12,14 +12,14 @@ int main()
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
     
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    auto[score, upgradeString] = loadSaveFile();
+    auto[score, upgradeString, scorePerClick] = loadSaveFile();
     Uint64 frameStart;
     bool running = true;
    
     std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
     std::vector<std::shared_ptr<shop>> shopStorage;
 
-    std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades));
+    std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades), std::ref(scorePerClick));
     for(int i=1;i<9;i++)
     {
         std::shared_ptr<shop> temp(new shop(upgrades[i],i));
@@ -49,11 +49,15 @@ int main()
                 {
                     int clickVal = checkClick(xPos, yPos);
                     if(clickVal == 0)
-                        {score += 1;}
+                        {score += scorePerClick;}
                     else if(clickVal > 0 and clickVal < 9)
                     {
                         upgradeShop(shopStorage[clickVal-1], score);
                         upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
+                        std::cout << "Cost for 10: " << shopStorage[clickVal-1]->seeAhead(10) << "\n";
+                        std::cout << "Cost for 100: " << shopStorage[clickVal-1]->seeAhead(100) << "\n";
+                        //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
+                        //!     Establish a thread for giving score per second
                     }
                     break;
                 }
@@ -65,6 +69,7 @@ int main()
         drawButton(renderer);
         drawSideBays(renderer, font, xPos, yPos);
         drawShopLevels(renderer, font, shopStorage, xPos);
+        drawShopCosts(renderer, font, shopStorage, xPos);
         drawScore(renderer, font, score);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;
@@ -76,7 +81,7 @@ int main()
     drawSaveScreen(renderer, font);
     if(saveThread.joinable())
         {saveThread.join();}
-    logSaveData(score.str(), bundleMap(upgrades));
+    logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str());
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
