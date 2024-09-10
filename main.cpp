@@ -12,14 +12,15 @@ int main()
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
     
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    auto[score, upgradeString, scorePerClick] = loadSaveFile();
+    auto[score, upgradeString, scorePerClick, scorePerSecond] = loadSaveFile();
     Uint64 frameStart;
     bool running = true;
    
     std::unordered_map<int,int> upgrades = parseUpgrades(upgradeString);
     std::vector<std::shared_ptr<shop>> shopStorage;
 
-    std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades), std::ref(scorePerClick));
+    std::thread saveThread(autoSave, std::ref(running), std::ref(score), std::ref(upgrades), std::ref(scorePerClick), std::ref(scorePerSecond));
+    std::thread scoreThread(autoScore, std::ref(running), std::ref(score), std::ref(scorePerSecond));
     for(int i=1;i<9;i++)
     {
         std::shared_ptr<shop> temp(new shop(upgrades[i],i));
@@ -74,13 +75,16 @@ int main()
         frameTime = SDL_GetTicks64() - frameStart;
         if(frameDelay > frameTime)
             {SDL_Delay(frameDelay - frameTime);}
+        {std::lock_guard<std::mutex> lock(saveLock);}
         {std::lock_guard<std::mutex> lock(scoreLock);}
     }
 
     drawSaveScreen(renderer, font);
     if(saveThread.joinable())
         {saveThread.join();}
-    logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str());
+    if(scoreThread.joinable())
+        {scoreThread.join();}
+    logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str());
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

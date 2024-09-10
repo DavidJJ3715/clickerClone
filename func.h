@@ -35,38 +35,52 @@ std::string bundleMap(std::unordered_map<int,int>);
 *********************************/
 using bigInt = boost::multiprecision::cpp_int;
 const int WIDTH = 1200, HEIGHT = 800, frameDelay = 10;
-std::mutex scoreLock;
+std::mutex saveLock, scoreLock;
 
 /********************************
 *       Save Functions          *
 *********************************/
-void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick)
+void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick, std::string scorePerSecond)
 {
-    std::ofstream scoreFile("save.txt");
+    std::ofstream scoreFile("saves.clcl");
     scoreFile << scoreString << "\n";
     scoreFile << upgradeString << "\n";
-    scoreFile << scorePerClick;
+    scoreFile << scorePerClick << "\n";
+    scoreFile << scorePerSecond;
 }
 
-std::tuple<bigInt,std::string, bigInt> loadSaveFile()
+std::tuple<bigInt,std::string, bigInt, bigInt> loadSaveFile()
 {
-    std::string scoreString, upgradeString, scorePerClick;
-    std::ifstream scoreFile("save.txt");
+    std::string scoreString, upgradeString, scorePerClick, scorePerSecond;
+    std::ifstream scoreFile("saves.clcl");
     scoreFile >> scoreString;
     scoreFile >> upgradeString;
     scoreFile >> scorePerClick;
-    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick));
+    scoreFile >> scorePerSecond;
+    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick), bigInt(scorePerSecond));
 }
 
-void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick)
+void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick, bigInt& scorePerSecond)
+{
+    while(running)
+    {
+        {
+            std::lock_guard<std::mutex> lock(saveLock);
+            logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str());
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
+}
+
+void autoScore(bool& running, bigInt& score, bigInt& scorePerSecond)
 {
     while(running)
     {
         {
             std::lock_guard<std::mutex> lock(scoreLock);
-            logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str());
+            score += scorePerSecond;
         }
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
