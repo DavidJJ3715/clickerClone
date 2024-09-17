@@ -5,6 +5,7 @@
 #include <chrono>
 #include <climits>
 #include <cmath>
+#include <ctime>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -28,6 +29,7 @@
 /********************************
 *       Function Prototypes     *
 *********************************/
+std::string tsToString();
 std::string bundleMap(std::unordered_map<int,int>);
 
 /********************************
@@ -40,24 +42,28 @@ std::mutex saveLock, scoreLock;
 /********************************
 *       Save Functions          *
 *********************************/
-void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick, std::string scorePerSecond)
+void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick, std::string scorePerSecond, std::string timeStamp)
 {
     std::ofstream scoreFile("saves.clcl");
     scoreFile << scoreString << "\n";
     scoreFile << upgradeString << "\n";
     scoreFile << scorePerClick << "\n";
-    scoreFile << scorePerSecond;
+    scoreFile << scorePerSecond << "\n";
+    scoreFile << timeStamp;
 }
 
-std::tuple<bigInt,std::string, bigInt, bigInt> loadSaveFile()
+std::tuple<bigInt,std::string, bigInt, bigInt, std::string> loadSaveFile()
 {
-    std::string scoreString, upgradeString, scorePerClick, scorePerSecond;
+    std::string scoreString, upgradeString, scorePerClick, scorePerSecond, date, time;
     std::ifstream scoreFile("saves.clcl");
     scoreFile >> scoreString;
     scoreFile >> upgradeString;
     scoreFile >> scorePerClick;
     scoreFile >> scorePerSecond;
-    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick), bigInt(scorePerSecond));
+    scoreFile >> date;
+    scoreFile >> time;
+    date.append(" ").append(time);
+    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick), bigInt(scorePerSecond), date);
 }
 
 void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick, bigInt& scorePerSecond)
@@ -66,7 +72,7 @@ void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrade
     {
         {
             std::lock_guard<std::mutex> lock(saveLock);
-            logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str());
+            logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str(), tsToString());
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -87,6 +93,25 @@ void autoScore(bool& running, bigInt& score, bigInt& scorePerSecond)
 /********************************
 *       Core Functionality      *
 *********************************/
+std::string tsToString()
+{
+    std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm timeString = *std::localtime(&time);
+    std::stringstream ss;
+    ss << std::put_time(&timeString, "%Y-%m-%d %H:%M:%S");
+    return ss.str();
+}
+
+std::chrono::system_clock::time_point stringToTs(std::string ts)
+{
+    std::istringstream ss(ts);
+    std::tm tm = {};
+ 
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    std::time_t time = std::mktime(&tm);
+    return std::chrono::system_clock::from_time_t(time);
+}
+
 int checkClick(int x, int y)
 {
     if(((x > (WIDTH/2)-100) and (x < (WIDTH/2)+100)) and ((y < (HEIGHT/2)+100)) and (y > (HEIGHT/2)-100))

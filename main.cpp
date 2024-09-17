@@ -12,7 +12,10 @@ int main()
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
     
     int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
-    auto[score, upgradeString, scorePerClick, scorePerSecond] = loadSaveFile();
+    auto[score, upgradeString, scorePerClick, scorePerSecond, timeStamp] = loadSaveFile();
+    bigInt elapsedTime = std::chrono::duration_cast<std::chrono::seconds>
+        (stringToTs(tsToString()) - stringToTs(timeStamp)).count();
+    score += scorePerSecond * elapsedTime;
     Uint64 frameStart;
     bool running = true;
    
@@ -57,7 +60,6 @@ int main()
                         upgradeShop(shopStorage[clickVal-1], score);
                         upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
                         //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
-                        //!     Establish a thread for giving score per second
                     }
                     break;
                 }
@@ -80,11 +82,9 @@ int main()
     }
 
     drawSaveScreen(renderer, font);
-    if(saveThread.joinable())
-        {saveThread.join();}
-    if(scoreThread.joinable())
-        {scoreThread.join();}
-    logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str());
+    if(saveThread.joinable() and scoreThread.joinable())
+        {saveThread.join(); scoreThread.join();}
+    logSaveData(score.str(), bundleMap(upgrades), scorePerClick.str(), scorePerSecond.str(), tsToString());
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
