@@ -11,7 +11,7 @@ int main()
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
     
-    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2;
+    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2, amountToSee = -1;
     auto[score, upgradeString, scorePerClick, scorePerSecond, timeStamp] = loadSaveFile();
     bigInt elapsedTime = std::chrono::duration_cast<std::chrono::seconds>
         (stringToTs(tsToString()) - stringToTs(timeStamp)).count();
@@ -52,14 +52,19 @@ int main()
                 case SDL_MOUSEBUTTONDOWN:
                 {
                     int clickVal = checkClick(xPos, yPos);
-                    std::cout << "Clicked: " << clickVal << "\n";
-                    if(clickVal == 0)
-                        {score += scorePerClick;}
-                    else if(clickVal > 0 and clickVal < 9)
+                    switch(clickVal)
                     {
-                        upgradeShop(shopStorage[clickVal-1], score);
-                        upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
-                        //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
+                        case 0:
+                            score += scorePerClick; 
+                            break;
+                        case 1 ... 9:
+                            upgradeShop(shopStorage[clickVal-1], score);
+                            upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
+                            //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
+                            break;
+                        case 10 ... 13:
+                            amountToSee = checkAmountToSee(clickVal);
+                            break;
                     }
                     break;
                 }
@@ -71,7 +76,7 @@ int main()
         drawButton(renderer);
         drawSideBays(renderer, font, xPos, yPos);
         drawShopLevels(renderer, font, shopStorage, xPos);
-        drawShopCosts(renderer, font, shopStorage, xPos);
+        drawShopCosts(renderer, font, shopStorage, score, xPos, amountToSee);
         drawScore(renderer, font, score);
         SDL_RenderPresent(renderer);
         frameTime = SDL_GetTicks64() - frameStart;

@@ -37,33 +37,30 @@ std::string bundleMap(std::unordered_map<int,int>);
 *********************************/
 using bigInt = boost::multiprecision::cpp_int;
 const int WIDTH = 1200, HEIGHT = 800, frameDelay = 10;
+std::string _;
 std::mutex saveLock, scoreLock;
+std::vector<std::string> saveFileStrings = {"#_Total_score:","#_Shop_levels:","#_Money_per_click:","#_Money_per_second:","#_Timestamp_of_last_save:"};
 
 /********************************
 *       Save Functions          *
 *********************************/
 void logSaveData(std::string scoreString, std::string upgradeString, std::string scorePerClick, std::string scorePerSecond, std::string timeStamp)
 {
+    std::vector<std::string> strList = {scoreString,upgradeString,scorePerClick,scorePerSecond,timeStamp};
     std::ofstream scoreFile("saves.clcl");
-    scoreFile << scoreString << "\n";
-    scoreFile << upgradeString << "\n";
-    scoreFile << scorePerClick << "\n";
-    scoreFile << scorePerSecond << "\n";
-    scoreFile << timeStamp;
+
+    for(int i=0;i<int(strList.size());++i)
+        {scoreFile << saveFileStrings[i] << "\n\t" << strList[i] << "\n";}
 }
 
 std::tuple<bigInt,std::string, bigInt, bigInt, std::string> loadSaveFile()
 {
-    std::string scoreString, upgradeString, scorePerClick, scorePerSecond, date, time;
+    std::vector<std::string> strList(saveFileStrings.size()+1);
     std::ifstream scoreFile("saves.clcl");
-    scoreFile >> scoreString;
-    scoreFile >> upgradeString;
-    scoreFile >> scorePerClick;
-    scoreFile >> scorePerSecond;
-    scoreFile >> date;
-    scoreFile >> time;
-    date.append(" ").append(time);
-    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick), bigInt(scorePerSecond), date);
+
+    for(int i=0;i<=int(saveFileStrings.size());++i)
+        {scoreFile >> _ >> strList[i];}
+    return std::make_tuple(bigInt(strList[0]),strList[1],bigInt(strList[2]),bigInt(strList[3]),strList[4].append(strList[5]));
 }
 
 void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick, bigInt& scorePerSecond)
@@ -143,6 +140,18 @@ void upgradeShop(std::shared_ptr<shopType>& shop, bigInt& score)
         score = score-shop->cost;
         shop->upgrade();
     }
+}
+
+int checkAmountToSee(int clickVal)
+{
+    switch(clickVal)
+    {
+        case 10: return 1;
+        case 11: return 10;
+        case 12: return 100;
+        case 13: return 0;
+    }
+    return -1;
 }
 
 std::unordered_map<int,int> parseUpgrades(std::string upgradeString)
@@ -389,15 +398,17 @@ void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::sha
 }
 
 template<typename shopType>
-void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, int xPos)
+void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, bigInt score, int xPos, int amountToSee)
 {
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
     {
         for(uint64_t i=0; i<shopList.size(); i++)
         {
             int tWidth = 0, tHeight = 0;
-            std::string costString = formatNumString(shopList[i]->cost);
-            costString.append(" ").append(giveLabel(shopList[i]->cost));
+            bigInt cost = (not amountToSee) ? shopList[i]->seeMax(score) : shopList[i]->seeAhead(amountToSee);
+
+            std::string costString = formatNumString(cost);
+            costString.append(" ").append(giveLabel(cost));
 
             TTF_SizeUTF8(font, costString.c_str(), &tWidth, &tHeight);
             int finalTextWidth = (tWidth > WIDTH/6) ? WIDTH/6 : tWidth;

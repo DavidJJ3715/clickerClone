@@ -8,8 +8,7 @@ class shop
     public:
         shop(int,int);
         void upgrade(); 
-        bigInt seeAhead(int);
-        std::tuple<int,bigInt> seeMax(bigInt);
+        bigInt seeAhead(int), seeMax(bigInt);
         int shopLevel=0;
         bigInt cost;
 
@@ -34,22 +33,20 @@ void shop::upgrade()
 bigInt shop::seeAhead(int amountToSee)
 {
     bigInt costAhead = cost;
-    for(int i=0; i<amountToSee; ++i)
+    for(int i=1; i<amountToSee; ++i)
         {costAhead = (costAhead*117)/100;}
     return costAhead;
 }
 
-std::tuple<int,bigInt> shop::seeMax(bigInt score)
+bigInt shop::seeMax(bigInt score)
 {
-    int counter = 0;
     bigInt costAhead = cost;
     while(score >= costAhead)
     {
         score -= costAhead;
         costAhead = (costAhead*117)/100;
-        counter+=1;
     }
-    return std::make_tuple(counter,costAhead);
+    return costAhead;
 }
 
 #endif
