@@ -58,7 +58,7 @@ int main()
                             score += scorePerClick; 
                             break;
                         case 1 ... 9:
-                            upgradeShop(shopStorage[clickVal-1], score);
+                            upgradeShop(shopStorage[clickVal-1], score, amountToSee);
                             upgrades[clickVal] = shopStorage[clickVal-1]->shopLevel;
                             //! Figure out how much scorePerClick to get per upgrade or scorePerSecond
                             break;

@@ -48,19 +48,25 @@ void logSaveData(std::string scoreString, std::string upgradeString, std::string
 {
     std::vector<std::string> strList = {scoreString,upgradeString,scorePerClick,scorePerSecond,timeStamp};
     std::ofstream scoreFile("saves.clcl");
-
-    for(int i=0;i<int(strList.size());++i)
-        {scoreFile << saveFileStrings[i] << "\n\t" << strList[i] << "\n";}
+    scoreFile << saveFileStrings[0] << "\n\t" << scoreString << "\n";
+    scoreFile << saveFileStrings[1] << "\n\t" << upgradeString << "\n";
+    scoreFile << saveFileStrings[2] << "\n\t" << scorePerClick << "\n";
+    scoreFile << saveFileStrings[3] << "\n\t" << scorePerSecond << "\n";
+    scoreFile << saveFileStrings[4] << "\n\t" << timeStamp;
 }
 
 std::tuple<bigInt,std::string, bigInt, bigInt, std::string> loadSaveFile()
 {
+    std::string scoreString, upgradeString, scorePerClick, scorePerSecond, date, time;
     std::vector<std::string> strList(saveFileStrings.size()+1);
     std::ifstream scoreFile("saves.clcl");
-
-    for(int i=0;i<=int(saveFileStrings.size());++i)
-        {scoreFile >> _ >> strList[i];}
-    return std::make_tuple(bigInt(strList[0]),strList[1],bigInt(strList[2]),bigInt(strList[3]),strList[4].append(strList[5]));
+    scoreFile >> _ >> scoreString;
+    scoreFile >> _ >> upgradeString;
+    scoreFile >> _ >> scorePerClick;
+    scoreFile >> _ >> scorePerSecond;
+    scoreFile >> _ >> date;
+    scoreFile >> time;
+    return std::make_tuple(bigInt(scoreString), upgradeString, bigInt(scorePerClick), bigInt(scorePerSecond), date.append(" ").append(time));
 }
 
 void autoSave(bool& running, bigInt& score, std::unordered_map<int,int>& upgrades, bigInt& scorePerClick, bigInt& scorePerSecond)
@@ -133,12 +139,13 @@ int checkClick(int x, int y)
 }
 
 template<typename shopType>
-void upgradeShop(std::shared_ptr<shopType>& shop, bigInt& score)
+void upgradeShop(std::shared_ptr<shopType>& shop, bigInt& score, int amountToSee)
 {
-    if(score >= shop->cost)
+    if(not amountToSee) {amountToSee = shop->seeMaxCount(score);}
+    if(score >= shop->seeAhead(amountToSee))
     {
         score = score-shop->cost;
-        shop->upgrade();
+        shop->upgrade(amountToSee);
     }
 }
 
@@ -405,7 +412,7 @@ void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shar
         for(uint64_t i=0; i<shopList.size(); i++)
         {
             int tWidth = 0, tHeight = 0;
-            bigInt cost = (not amountToSee) ? shopList[i]->seeMax(score) : shopList[i]->seeAhead(amountToSee);
+            bigInt cost = (amountToSee == 0) ? shopList[i]->seeMax(score) : shopList[i]->seeAhead(amountToSee);
 
             std::string costString = formatNumString(cost);
             costString.append(" ").append(giveLabel(cost));
