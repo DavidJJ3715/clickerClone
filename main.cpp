@@ -11,7 +11,7 @@ int main()
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     TTF_Font* font = TTF_OpenFont("DejaVuSans.ttf", 75);
     
-    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2, amountToSee = -1;
+    int frameTime, xPos = WIDTH/2, yPos = HEIGHT/2, amountToSee = 1;
     auto[score, upgradeString, scorePerClick, scorePerSecond, timeStamp] = loadSaveFile();
     bigInt elapsedTime = std::chrono::duration_cast<std::chrono::seconds>
         (stringToTs(tsToString()) - stringToTs(timeStamp)).count();

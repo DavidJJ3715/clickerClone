@@ -8,8 +8,8 @@ class shop
     public:
         shop(int,int);
         void upgrade(int); 
-        bigInt seeAhead(int), seeMax(bigInt);
-        int seeMaxCount(bigInt);
+        bigInt costOfNext(bigInt), costOfAmount(bigInt,int,int);
+        int seeLimit(bigInt,bigInt,int);
         int shopLevel=0;
         bigInt cost;
 
@@ -21,47 +21,31 @@ class shop
 shop::shop(int level, int shopNumber)
 {
     pngPath.append(std::to_string(shopNumber)).append(".png");
-    cost = costs[shopNumber];
-    upgrade(level);
+    shopLevel = level;
+    cost = costOfAmount(costs[shopNumber],0,shopLevel);
+}
+
+bigInt shop::costOfNext(bigInt initCost)
+    {return ((initCost*117+99)/100);}
+
+bigInt shop::costOfAmount(bigInt initCost, int counter, int limit)
+{
+    if(counter == limit)
+        {return initCost;}
+    return costOfAmount(costOfNext(initCost),counter+1,limit);
+}
+
+int shop::seeLimit(bigInt playerScore, bigInt initCost, int amount)
+{
+    if(playerScore < initCost)
+        {return amount;}
+    return seeLimit(playerScore-initCost,costOfNext(initCost),amount+1);
 }
 
 void shop::upgrade(int purchased) 
 {
     shopLevel+=purchased;
-    for(int i=1;i<purchased;++i)
-        {cost = (cost*117)/100;}
-}
-
-bigInt shop::seeAhead(int amountToSee)
-{
-    bigInt costAhead = cost;
-    for(int i=1; i<amountToSee; ++i)
-        {costAhead = (costAhead*117)/100;}
-    return costAhead;
-}
-
-bigInt shop::seeMax(bigInt score)
-{
-    bigInt costAhead = cost;
-    while(score >= costAhead)
-    {
-        score -= costAhead;
-        costAhead = (costAhead*117)/100;
-    }
-    return costAhead;
-}
-
-int shop::seeMaxCount(bigInt score)
-{
-    bigInt costAhead = cost;
-    int counter = 0;
-    while(score >= costAhead)
-    {
-        score -= costAhead;
-        costAhead = (costAhead*117)/100;
-        counter += 1;
-    }
-    return counter;
+    cost = costOfAmount(cost,0,purchased);
 }
 
 #endif

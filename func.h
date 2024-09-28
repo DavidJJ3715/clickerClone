@@ -141,11 +141,16 @@ int checkClick(int x, int y)
 template<typename shopType>
 void upgradeShop(std::shared_ptr<shopType>& shop, bigInt& score, int amountToSee)
 {
-    if(not amountToSee) {amountToSee = shop->seeMaxCount(score);}
-    if(score >= shop->seeAhead(amountToSee))
+    if(amountToSee >= 0)
     {
-        score = score-shop->cost;
-        shop->upgrade(amountToSee);
+        if(amountToSee == 0) {amountToSee = shop->seeLimit(score,shop->cost,0);}
+        bigInt calc = shop->costOfAmount(shop->cost,0,amountToSee);
+
+        if(score >= calc)
+        {
+            score -= calc;
+            shop->upgrade(amountToSee);
+        }
     }
 }
 
@@ -381,7 +386,7 @@ void drawSideBays(SDL_Renderer* renderer, TTF_Font* font, int xPos, int yPos)
 }
 
 template<typename shopType>
-void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, int xPos)
+void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>> shopList, int xPos)
 {
     char levelString[128];
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
@@ -405,14 +410,17 @@ void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::sha
 }
 
 template<typename shopType>
-void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>>& shopList, bigInt score, int xPos, int amountToSee)
+void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>> shopList, bigInt score, int xPos, int amountToSee)
 {
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
     {
         for(uint64_t i=0; i<shopList.size(); i++)
         {
             int tWidth = 0, tHeight = 0;
-            bigInt cost = (amountToSee == 0) ? shopList[i]->seeMax(score) : shopList[i]->seeAhead(amountToSee);
+            if(amountToSee == 0) 
+                {amountToSee = shopList[i]->seeLimit(score,shopList[i]->cost,0);}
+
+            bigInt cost = shopList[i]->costOfAmount(shopList[i]->cost,0,amountToSee);
 
             std::string costString = formatNumString(cost);
             costString.append(" ").append(giveLabel(cost));
