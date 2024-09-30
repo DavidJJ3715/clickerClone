@@ -24,8 +24,6 @@
 #include "../SDL2/include/SDL2/SDL_ttf.h"
 #include "../SDL2/include/SDL2/SDL_image.h"
 
-//! https://integers.info/large-numbers/googol
-
 /********************************
 *       Function Prototypes     *
 *********************************/
@@ -412,15 +410,17 @@ void drawShopLevels(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::sha
 template<typename shopType>
 void drawShopCosts(SDL_Renderer* renderer, TTF_Font* font, std::vector<std::shared_ptr<shopType>> shopList, bigInt score, int xPos, int amountToSee)
 {
+    int purchasable = 0;
     if(xPos > WIDTH-(WIDTH/3) and xPos < WIDTH)
     {
         for(uint64_t i=0; i<shopList.size(); i++)
         {
             int tWidth = 0, tHeight = 0;
+            std::cout << "Amount: " << amountToSee << "\n";
             if(amountToSee == 0) 
-                {amountToSee = shopList[i]->seeLimit(score,shopList[i]->cost,0);}
-
-            bigInt cost = shopList[i]->costOfAmount(shopList[i]->cost,0,amountToSee);
+                {purchasable = shopList[i]->seeLimit(score,shopList[i]->cost,0);}
+            std::cout << "Amount: " << amountToSee << "\n";
+            bigInt cost = shopList[i]->costOfAmount(shopList[i]->cost,0,purchasable);
 
             std::string costString = formatNumString(cost);
             costString.append(" ").append(giveLabel(cost));

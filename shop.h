@@ -26,7 +26,7 @@ shop::shop(int level, int shopNumber)
 }
 
 bigInt shop::costOfNext(bigInt initCost)
-    {return ((initCost*117+99)/100);}
+    {return ((initCost*117)/100);}
 
 bigInt shop::costOfAmount(bigInt initCost, int counter, int limit)
 {
@@ -45,7 +45,7 @@ int shop::seeLimit(bigInt playerScore, bigInt initCost, int amount)
 void shop::upgrade(int purchased) 
 {
     shopLevel+=purchased;
-    cost = costOfAmount(cost,0,purchased);
+    cost += costOfAmount(cost,0,purchased);
 }
 
 #endif
